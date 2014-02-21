@@ -60,7 +60,7 @@ func NewLogger(logLevel syslog.Priority, subpackage string, dest *os.File) *Logg
 	return logger
 }
 
-// NewDefaultLogger returns a bletchley.Logger initialized with workable
+// NewDefaultLogger returns a picolog.Logger initialized with workable
 // defaults (outputs to stderr, prefix "default", priority DEBUG).
 // Useful as a fallback when a logger hasn't been initialized.
 func NewDefaultLogger() *Logger {
