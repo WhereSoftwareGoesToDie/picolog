@@ -89,9 +89,9 @@ func (l *Logger) ensureInitialized() {
 // NewSubLogger returns a Logger writing to the same stream, with a
 // prefix constructed from the provided prefix and the parent Logger's
 // prefix. Subloggers can be nested.
-func (l *Logger) NewSubLogger(level syslog.Priority, prefix string) *Logger {
+func (l *Logger) NewSubLogger(prefix string) *Logger {
 	subPrefix := fmt.Sprintf("%s[%s]", l.prefix, prefix)
-	sub := NewLogger(level, subPrefix, l.destStream)
+	sub := NewLogger(l.logLevel, subPrefix, l.destStream)
 	l.subloggers = append(l.subloggers, sub)
 	return sub
 }
