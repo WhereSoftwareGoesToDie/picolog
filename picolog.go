@@ -56,10 +56,11 @@ func NewLogger(logLevel syslog.Priority, subpackage string, dest *os.File) *Logg
 	if logLevel == syslog.LOG_DEBUG {
 		flags |= log.Lshortfile
 	}
-	logger.prefix = fmt.Sprintf("[%s] ", subpackage)
+	logger.prefix = subpackage
+	renderedPrefix := fmt.Sprintf("[%s] ", logger.prefix)
 	logger.destStream = dest
 	logger.writer = bufio.NewWriter(logger.destStream)
-	logger.logger = log.New(logger.writer, logger.prefix, flags)
+	logger.logger = log.New(logger.writer, renderedPrefix, flags)
 	logger.initialized = true
 	return logger
 }
@@ -90,7 +91,7 @@ func (l *Logger) ensureInitialized() {
 // prefix constructed from the provided prefix and the parent Logger's
 // prefix. Subloggers can be nested.
 func (l *Logger) NewSubLogger(prefix string) *Logger {
-	subPrefix := fmt.Sprintf("%s[%s]", l.prefix, prefix)
+	subPrefix := fmt.Sprintf("%s][%s", l.prefix, prefix)
 	sub := NewLogger(l.logLevel, subPrefix, l.destStream)
 	l.subloggers = append(l.subloggers, sub)
 	return sub
