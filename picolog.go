@@ -14,6 +14,9 @@ type Logger struct {
 	logLevel    syslog.Priority
 	logger      *log.Logger
 	writer      *bufio.Writer
+	destStream *os.File
+	prefix string
+	subloggers []*Logger
 	initialized bool
 }
 
@@ -53,9 +56,10 @@ func NewLogger(logLevel syslog.Priority, subpackage string, dest *os.File) *Logg
 	if logLevel == syslog.LOG_DEBUG {
 		flags |= log.Lshortfile
 	}
-	prefix := fmt.Sprintf("[%s] ", subpackage)
-	logger.writer = bufio.NewWriter(dest)
-	logger.logger = log.New(logger.writer, prefix, flags)
+	logger.prefix = fmt.Sprintf("[%s] ", subpackage)
+	logger.destStream = dest
+	logger.writer = bufio.NewWriter(logger.destStream)
+	logger.logger = log.New(logger.writer, logger.prefix, flags)
 	logger.initialized = true
 	return logger
 }
@@ -80,6 +84,16 @@ func (l *Logger) ensureInitialized() {
 	if !l.initialized {
 		l.initializeDefaultLogger()
 	}
+}
+
+// NewSubLogger returns a Logger writing to the same stream, with a
+// prefix constructed from the provided prefix and the parent Logger's
+// prefix. Subloggers can be nested.
+func (l *Logger) NewSubLogger(level syslog.Priority, prefix string) *Logger {
+	subPrefix := fmt.Sprintf("%s[%s]", l.prefix, prefix)
+	sub := NewLogger(level, subPrefix, l.destStream)
+	l.subloggers = append(l.subloggers, sub)
+	return sub
 }
 
 // Printf is the lowest-level output function of our Logger. Will use a
