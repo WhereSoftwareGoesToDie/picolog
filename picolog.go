@@ -1,3 +1,8 @@
+/*
+picolog is a tiny levelled logging package for go. It supports syslog
+log levels, subloggers, and not much else. Written because all the
+existing solutions either didn't do what I needed or were too weighty.
+*/
 package picolog
 
 import (
