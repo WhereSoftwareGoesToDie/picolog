@@ -29,6 +29,34 @@ func TestLogger(t *testing.T) {
 	}
 }
 
+func TestSubLogger(t *testing.T) {
+	fo, err := ioutil.TempFile(".", "picolog_sublogger_test_out")
+	fname := fo.Name()
+	defer os.Remove(fname)
+	if err != nil {
+		t.Errorf("Could not open tempfile: %v", err)
+	}
+	l := NewLogger(syslog.LOG_INFO, "test1", fo)
+	l2 := l.NewSubLogger("test2")
+	l3 := l2.NewSubLogger("test3")
+	// Ordering is not a bug
+	l.Infof("one")
+	l3.Infof("two")
+	l2.Infof("three")
+	fo.Seek(0, 0)
+	out, err := ioutil.ReadAll(fo)
+	if err != nil {
+		t.Errorf("Could not read tempfile: %v", err)
+	}
+	pattern := `\[test1\]\s+[\s\d:/.]+one\s+`
+	pattern += `\[test1\]\[test2\]\[test3\]\s+[\s\d:/.]+two\s+`
+	pattern += `\[test1\]\[test2\]\s+[\s\d:/.]+three\s+`
+	re := regexp.MustCompile(pattern)
+	if !re.Match(out) {
+		t.Errorf("Wanted a match for %s, got %s", pattern, out)
+	}
+}
+
 func TestParseLogLevel(t *testing.T) {
 	var logLevelValid = []struct {
 		in string
