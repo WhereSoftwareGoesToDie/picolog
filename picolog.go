@@ -143,3 +143,18 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 func (l *Logger) Infof(format string, v ...interface{}) {
 	l.Printf(format, syslog.LOG_INFO, v...)
 }
+
+// Emergf logs one printf-formatted message at LOG_EMERG.
+func (l *Logger) Emergf(format string, v ...interface{}) {
+	l.Printf(format, syslog.LOG_EMERG, v...)
+}
+
+// Alertf logs one printf-formatted message at LOG_ALERT.
+func (l *Logger) Alertf(format string, v ...interface{}) {
+	l.Printf(format, syslog.LOG_ALERT, v...)
+}
+
+// Noticef logs one printf-formatted message at LOG_NOTICE.
+func (l *Logger) Noticef(format string, v ...interface{}) {
+	l.Printf(format, syslog.LOG_NOTICE, v...)
+}
