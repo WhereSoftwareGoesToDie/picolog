@@ -16,7 +16,7 @@ func TestLogger(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not open tempfile: %v", err)
 	}
-	l := NewLogger(syslog.LOG_INFO, "test", fo)
+	l := NewLogger(LogInfo, "test", fo)
 	l.Infof("logging things")
 	fo.Seek(0, 0)
 	out, err := ioutil.ReadAll(fo)
@@ -36,7 +36,7 @@ func TestSubLogger(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not open tempfile: %v", err)
 	}
-	l := NewLogger(syslog.LOG_INFO, "test1", fo)
+	l := NewLogger(LogInfo, "test1", fo)
 	l2 := l.NewSubLogger("test2")
 	l3 := l2.NewSubLogger("test3")
 	// Ordering is not a bug
@@ -60,15 +60,15 @@ func TestSubLogger(t *testing.T) {
 func TestParseLogLevel(t *testing.T) {
 	var logLevelValid = []struct {
 		in string
-		out syslog.Priority
+		out LogLevel
 	}{
-		{"debug", syslog.LOG_DEBUG},
-		{"info", syslog.LOG_INFO},
-		{"warning", syslog.LOG_WARNING},
-		{"emerg", syslog.LOG_EMERG},
-		{"notice", syslog.LOG_NOTICE},
+		{"debug", LogLevel(syslog.LOG_DEBUG)},
+		{"info", LogLevel(syslog.LOG_INFO)},
+		{"warning", LogLevel(syslog.LOG_WARNING)},
+		{"emerg", LogLevel(syslog.LOG_EMERG)},
+		{"notice", LogLevel(syslog.LOG_NOTICE)},
 	}
-	testOneLevel := func(in string, out syslog.Priority) {
+	testOneLevel := func(in string, out LogLevel) {
 		res, err := ParseLogLevel(in)
 		if err != nil {
 			t.Errorf("%v", err)

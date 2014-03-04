@@ -14,9 +14,10 @@ import (
 	"strings"
 )
 
-// Logger is a leveled logger type.
+// Logger is a leveled logger type. It can be a sublogger of another
+// logger, and have an arbitrary number of subloggers itself. 
 type Logger struct {
-	logLevel    syslog.Priority
+	logLevel    LogLevel
 	logger      *log.Logger
 	writer      *bufio.Writer
 	destStream *os.File
@@ -25,40 +26,80 @@ type Logger struct {
 	initialized bool
 }
 
+// LogLevel is a type representing the usual syslog log levels from
+// LOG_DEBUG to LOG_EMERG. It does not reflect the go syslog package's
+// concept of 'Priority'. 
+type LogLevel syslog.Priority
+
+const (
+	LogDebug LogLevel = LogLevel(syslog.LOG_DEBUG)
+	LogInfo = LogLevel(syslog.LOG_INFO)
+	LogNotice = LogLevel(syslog.LOG_NOTICE)
+	LogWarning = LogLevel(syslog.LOG_WARNING)
+	LogErr = LogLevel(syslog.LOG_ERR)
+	LogCrit = LogLevel(syslog.LOG_CRIT)
+	LogAlert = LogLevel(syslog.LOG_ALERT)
+	LogEmerg = LogLevel(syslog.LOG_EMERG)
+)
+
 // ParseLogLevel takes a string and returns a syslog.Priority according
 // to the standard syslog string representation. Not case-sensitive.
-func ParseLogLevel(level string) (syslog.Priority, error) {
+func ParseLogLevel(level string) (LogLevel, error) {
 	level = strings.ToLower(level)
 	switch {
 	case level == "emerg":
-		return syslog.LOG_EMERG, nil
+		return LogLevel(syslog.LOG_EMERG), nil
 	case level == "alert":
-		return syslog.LOG_ALERT, nil
+		return LogLevel(syslog.LOG_ALERT), nil
 	case level == "crit":
-		return syslog.LOG_CRIT, nil
+		return LogLevel(syslog.LOG_CRIT), nil
 	case level == "err":
-		return syslog.LOG_ERR, nil
+		return LogLevel(syslog.LOG_ERR), nil
 	case level == "warning":
-		return syslog.LOG_WARNING, nil
+		return LogLevel(syslog.LOG_WARNING), nil
 	case level == "notice":
-		return syslog.LOG_NOTICE, nil
+		return LogLevel(syslog.LOG_NOTICE), nil
 	case level == "info":
-		return syslog.LOG_INFO, nil
+		return LogLevel(syslog.LOG_INFO), nil
 	case level == "debug":
-		return syslog.LOG_DEBUG, nil
+		return LogLevel(syslog.LOG_DEBUG), nil
 	}
-	return syslog.Priority(0), fmt.Errorf("Invalid log level: %s", level)
+	return LogLevel(syslog.Priority(0)), fmt.Errorf("Invalid log level: %s", level)
+}
+
+// String returns the default (lowercase) string representation of a
+// LogLevel.
+func (l LogLevel) String() string {
+	switch l {
+	case LogLevel(syslog.LOG_EMERG):
+		return "emerg"
+	case LogLevel(syslog.LOG_ALERT):
+		return "alert"
+	case LogLevel(syslog.LOG_CRIT):
+		return "crit"
+	case LogLevel(syslog.LOG_ERR):
+		return "err"
+	case LogLevel(syslog.LOG_WARNING):
+		return "warning"
+	case LogLevel(syslog.LOG_NOTICE):
+		return "notice"
+	case LogLevel(syslog.LOG_INFO):
+		return "info"
+	case LogLevel(syslog.LOG_DEBUG):
+		return "debug"
+	}
+	return "invalid log level"
 }
 
 // Return a new Logger. logLevel is a syslog log level,
 // subpackage is used to construct the log prefix, and dest is where to
 // write the log to.
-func NewLogger(logLevel syslog.Priority, subpackage string, dest *os.File) *Logger {
+func NewLogger(logLevel LogLevel, subpackage string, dest *os.File) *Logger {
 	logger := new(Logger)
 	logger.logLevel = logLevel
 	flags := log.Ldate | log.Ltime
 	// If logging at DEBUG, include file paths and line numbers
-	if logLevel == syslog.LOG_DEBUG {
+	if logLevel == LogLevel(syslog.LOG_DEBUG) {
 		flags |= log.Lshortfile
 	}
 	logger.prefix = subpackage
@@ -74,7 +115,7 @@ func NewLogger(logLevel syslog.Priority, subpackage string, dest *os.File) *Logg
 // defaults (outputs to stderr, prefix "default", priority DEBUG).
 // Useful as a fallback when a logger hasn't been initialized.
 func NewDefaultLogger() *Logger {
-	return NewLogger(syslog.LOG_DEBUG, "default", os.Stderr)
+	return NewLogger(LogDebug, "default", os.Stderr)
 }
 
 // initializeDefaultLogger takes a (possibly nil) *Logger and allocates
@@ -104,7 +145,7 @@ func (l *Logger) NewSubLogger(prefix string) *Logger {
 
 // Printf is the lowest-level output function of our Logger. Will use a
 // default logger if l is not initialized.
-func (l *Logger) Printf(format string, level syslog.Priority, v ...interface{}) {
+func (l *Logger) Printf(format string, level LogLevel, v ...interface{}) {
 	l.ensureInitialized()
 	if level <= l.logLevel {
 		msg := fmt.Sprintf(format, v...)
@@ -119,42 +160,42 @@ func (l *Logger) Printf(format string, level syslog.Priority, v ...interface{}) 
 
 // Debugf logs one printf-formatted message at LOG_DEBUG.
 func (l *Logger) Debugf(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_DEBUG, v...)
+	l.Printf(format, LogDebug, v...)
 }
 
 // Errorf logs one printf-formatted message at LOG_ERR.
 func (l *Logger) Errorf(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_ERR, v...)
+	l.Printf(format, LogErr, v...)
 }
 
 // Warningf logs one printf-formatted message at LOG_WARNING.
 func (l *Logger) Warningf(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_WARNING, v...)
+	l.Printf(format, LogWarning, v...)
 }
 
 // Fatalf logs one printf-formatted message at LOG_CRIT, and then exits
 // with an error code.
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_CRIT, v...)
+	l.Printf(format, LogErr, v...)
 	os.Exit(1)
 }
 
 // Infof logs one printf-formatted message at LOG_INFO.
 func (l *Logger) Infof(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_INFO, v...)
+	l.Printf(format, LogInfo, v...)
 }
 
 // Emergf logs one printf-formatted message at LOG_EMERG.
 func (l *Logger) Emergf(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_EMERG, v...)
+	l.Printf(format, LogEmerg, v...)
 }
 
 // Alertf logs one printf-formatted message at LOG_ALERT.
 func (l *Logger) Alertf(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_ALERT, v...)
+	l.Printf(format, LogAlert, v...)
 }
 
 // Noticef logs one printf-formatted message at LOG_NOTICE.
 func (l *Logger) Noticef(format string, v ...interface{}) {
-	l.Printf(format, syslog.LOG_NOTICE, v...)
+	l.Printf(format, LogNotice, v...)
 }
