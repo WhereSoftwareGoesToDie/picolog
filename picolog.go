@@ -15,31 +15,31 @@ import (
 )
 
 // Logger is a leveled logger type. It can be a sublogger of another
-// logger, and have an arbitrary number of subloggers itself. 
+// logger, and have an arbitrary number of subloggers itself.
 type Logger struct {
 	logLevel    LogLevel
 	logger      *log.Logger
 	writer      *bufio.Writer
-	destStream *os.File
-	prefix string
-	subloggers []*Logger
+	destStream  *os.File
+	prefix      string
+	subloggers  []*Logger
 	initialized bool
 }
 
 // LogLevel is a type representing the usual syslog log levels from
 // LOG_DEBUG to LOG_EMERG. It does not reflect the go syslog package's
-// concept of 'Priority'. 
+// concept of 'Priority'.
 type LogLevel syslog.Priority
 
 const (
-	LogDebug LogLevel = LogLevel(syslog.LOG_DEBUG)
-	LogInfo = LogLevel(syslog.LOG_INFO)
-	LogNotice = LogLevel(syslog.LOG_NOTICE)
-	LogWarning = LogLevel(syslog.LOG_WARNING)
-	LogErr = LogLevel(syslog.LOG_ERR)
-	LogCrit = LogLevel(syslog.LOG_CRIT)
-	LogAlert = LogLevel(syslog.LOG_ALERT)
-	LogEmerg = LogLevel(syslog.LOG_EMERG)
+	LogDebug   LogLevel = LogLevel(syslog.LOG_DEBUG)
+	LogInfo             = LogLevel(syslog.LOG_INFO)
+	LogNotice           = LogLevel(syslog.LOG_NOTICE)
+	LogWarning          = LogLevel(syslog.LOG_WARNING)
+	LogErr              = LogLevel(syslog.LOG_ERR)
+	LogCrit             = LogLevel(syslog.LOG_CRIT)
+	LogAlert            = LogLevel(syslog.LOG_ALERT)
+	LogEmerg            = LogLevel(syslog.LOG_EMERG)
 )
 
 // ParseLogLevel takes a string and returns a LogLevel according

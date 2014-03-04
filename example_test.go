@@ -1,9 +1,9 @@
 package picolog_test
 
 import (
+	"fmt"
 	"github.com/anchor/picolog"
 	"os"
-	"fmt"
 )
 
 func Example() {

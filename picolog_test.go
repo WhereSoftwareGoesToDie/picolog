@@ -2,11 +2,11 @@ package picolog
 
 import (
 	"io/ioutil"
-	"strings"
-	"testing"
-	"regexp"
 	"log/syslog"
 	"os"
+	"regexp"
+	"strings"
+	"testing"
 )
 
 func TestLogger(t *testing.T) {
@@ -59,7 +59,7 @@ func TestSubLogger(t *testing.T) {
 
 func TestParseLogLevel(t *testing.T) {
 	var logLevelValid = []struct {
-		in string
+		in  string
 		out LogLevel
 	}{
 		{"debug", LogLevel(syslog.LOG_DEBUG)},
