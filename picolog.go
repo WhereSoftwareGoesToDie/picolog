@@ -42,7 +42,7 @@ const (
 	LogEmerg = LogLevel(syslog.LOG_EMERG)
 )
 
-// ParseLogLevel takes a string and returns a syslog.Priority according
+// ParseLogLevel takes a string and returns a LogLevel according
 // to the standard syslog string representation. Not case-sensitive.
 func ParseLogLevel(level string) (LogLevel, error) {
 	level = strings.ToLower(level)
